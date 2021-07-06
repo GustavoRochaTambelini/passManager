@@ -36,15 +36,30 @@ export function RegisterLoginData() {
     formState: {
       errors
     }
-  } = useForm();
+  } = useForm({resolver: yupResolver(schema)});
 
   async function handleRegister(formData: FormData) {
     const newLoginData = {
       id: String(uuid.v4()),
       ...formData
     }
-
     // Save data on AsyncStorage
+    try {
+      const dataKey = "@passmanager:logins";
+      const data = await AsyncStorage.getItem(dataKey);            
+      const currretData = data ? JSON.parse(data!) : [];
+      
+      const dataFormatted = [
+          ...currretData,
+          newLoginData
+      ];      
+      await AsyncStorage.setItem(dataKey, JSON.stringify(dataFormatted));
+
+      reset();
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Não foi possivel gravar passwords!');
+    }    
   }
 
   return (
@@ -60,10 +75,8 @@ export function RegisterLoginData() {
           <Input
             title="Título"
             name="title"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.title && errors.title.message}
             placeholder="Escreva o título aqui"
             autoCapitalize="sentences"
             autoCorrect
@@ -71,10 +84,8 @@ export function RegisterLoginData() {
           <Input
             title="Email"
             name="email"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.email && errors.email.message}
             placeholder="Escreva o Email aqui"
             autoCorrect={false}
             autoCapitalize="none"
@@ -83,10 +94,8 @@ export function RegisterLoginData() {
           <Input
             title="Senha"
             name="password"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.password && errors.password.message}
             secureTextEntry
             placeholder="Escreva a senha aqui"
           />
